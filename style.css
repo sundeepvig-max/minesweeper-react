@@ -1,0 +1,195 @@
+:root {
+    --bg-color: #f7f7f7;
+    --primary-color: #4a752c;
+    --grass-light: #aad751;
+    --grass-dark: #a2d149;
+    --grass-light-hover: #b9dd77;
+    --grass-dark-hover: #b1d960;
+    --dirt-light: #e5c29f;
+    --dirt-dark: #d7b899;
+    --text-color: #fff;
+    --board-border: #87af3a;
+    
+    --num-1: #1976d2;
+    --num-2: #388e3c;
+    --num-3: #d32f2f;
+    --num-4: #7b1fa2;
+    --num-5: #ff8f00;
+    --num-6: #0097a7;
+    --num-7: #424242;
+    --num-8: #9e9e9e;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Make sure container doesn't overflow screen width */
+#root {
+    max-width: 100vw;
+    display: flex;
+    justify-content: center;
+}
+
+.game-container {
+    background-color: var(--primary-color);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    max-width: 100vw;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.difficulty-selector {
+    width: 100%;
+    text-align: center;
+}
+
+select#difficulty {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 500;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+select#difficulty:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+select#difficulty option {
+    background-color: #4a752c;
+    color: white;
+}
+
+.stats-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.stat-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    min-width: 80px;
+    justify-content: center;
+}
+
+.icon {
+    font-size: 22px;
+}
+
+.restart-btn {
+    background-color: transparent;
+    border: none;
+    font-size: 36px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+    transition: transform 0.1s;
+}
+
+.restart-btn:active {
+    transform: scale(0.9);
+}
+
+.board-container {
+    background-color: var(--board-border);
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    overflow: auto;
+    max-width: 100vw;
+}
+
+.board {
+    display: grid;
+    background-color: var(--board-border);
+}
+
+.cell {
+    /* Dimensions are handled dynamically by inline grid style `min(...)` */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    /* responsive font size using clamp */
+    font-size: clamp(12px, 2.5vw, 18px);
+    cursor: pointer;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.cell.light { background-color: var(--grass-light); }
+.cell.dark { background-color: var(--grass-dark); }
+.cell.light:not(.revealed):hover { background-color: var(--grass-light-hover); }
+.cell.dark:not(.revealed):hover { background-color: var(--grass-dark-hover); }
+
+.cell.revealed.light { background-color: var(--dirt-light); cursor: default; }
+.cell.revealed.dark { background-color: var(--dirt-dark); cursor: default; }
+
+.cell[data-value="1"] { color: var(--num-1); }
+.cell[data-value="2"] { color: var(--num-2); }
+.cell[data-value="3"] { color: var(--num-3); }
+.cell[data-value="4"] { color: var(--num-4); }
+.cell[data-value="5"] { color: var(--num-5); }
+.cell[data-value="6"] { color: var(--num-6); }
+.cell[data-value="7"] { color: var(--num-7); }
+.cell[data-value="8"] { color: var(--num-8); }
+
+.flag-icon, .mine-icon {
+    font-size: clamp(14px, 2.5vw, 20px);
+    line-height: 1;
+}
+
+.cell.exploded {
+    background-color: rgba(255, 0, 0, 0.4) !important;
+}
+
+.cell.flag-wrong {
+    background-color: rgba(255, 0, 0, 0.4) !important;
+}
