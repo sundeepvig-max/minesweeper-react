@@ -25,9 +25,15 @@ function App() {
     const [time, setTime] = useState(0);
     const [isFirstClick, setIsFirstClick] = useState(true);
 
-    const timerRef = useRef(null);
+    const [bestScores, setBestScores] = useState({
+        easy: localStorage.getItem('minesweeper_best_easy') || null,
+        medium: localStorage.getItem('minesweeper_best_medium') || null,
+        hard: localStorage.getItem('minesweeper_best_hard') || null,
+    });
 
-    // Audio effects
+    const timerRef = useRef(null);
+    const timeRef = useRef(0);
+
     const playSound = (id) => {
         const audio = document.getElementById(id);
         if (audio) {
@@ -63,6 +69,7 @@ function App() {
         setFace(EMOJI_SMILE);
         setIsFirstClick(true);
         setTime(0);
+        timeRef.current = 0;
         if (timerRef.current) clearInterval(timerRef.current);
     };
 
@@ -76,7 +83,11 @@ function App() {
     useEffect(() => {
         if (!isFirstClick && !gameOver && !win) {
             timerRef.current = setInterval(() => {
-                setTime(t => (t < 999 ? t + 1 : 999));
+                setTime(t => {
+                    const next = t < 999 ? t + 1 : 999;
+                    timeRef.current = next;
+                    return next;
+                });
             }, 1000);
         }
         return () => {
@@ -167,9 +178,7 @@ function App() {
     };
 
     const handleRightClick = (e, r, c) => {
-        e.preventDefault();
-        // Allow mobile touch to ignore click
-        if (e.type !== 'contextmenu') e.preventDefault();
+        if (e) e.preventDefault();
         
         if (gameOver || win || isFirstClick || board[r][c].isRevealed) return;
 
@@ -218,6 +227,14 @@ function App() {
             playSound('win-sound');
             setFlags(0);
             
+            const finalTime = timeRef.current;
+            const currentBestTime = localStorage.getItem(`minesweeper_best_${difficulty}`);
+            
+            if (!currentBestTime || finalTime < parseInt(currentBestTime)) {
+                localStorage.setItem(`minesweeper_best_${difficulty}`, finalTime);
+                setBestScores(prev => ({...prev, [difficulty]: finalTime}));
+            }
+            
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     if (currentBoard[r][c].isMine && !currentBoard[r][c].isFlagged) {
@@ -234,29 +251,26 @@ function App() {
         if(gameOver || win || board[r][c].isRevealed || board[r][c].isFlagged) return;
         setFace(EMOJI_OOH);
         touchTimer.current = setTimeout(() => {
-            handleRightClick(e, r, c);
+            handleRightClick(null, r, c); // Null event so we don't try to standard preventDefault if not right
             touchTimer.current = null;
         }, 400);
     };
     
-    // We add e.preventDefault() on touchEnd to stop sending mouse events if we handled long press.
     const onTouchEnd = (e, r, c) => {
         if(touchTimer.current) {
             clearTimeout(touchTimer.current);
-            // It was a short tap
             handleLeftClick(r, c);
         }
         if (!gameOver && !win) setFace(EMOJI_SMILE);
-        // We prevent default so that mouse events aren't triggered right after a touch
-        // which could fire left click on top of right click flag logic
     };
 
     const { rows, cols } = DIFFICULTIES[difficulty];
-    // Dynamic styling for cell size to be fully responsive
     const gridStyle = {
         gridTemplateColumns: `repeat(${cols}, min(30px, calc((100vw - 32px) / ${cols})))`,
         gridTemplateRows: `repeat(${rows}, min(30px, calc((100vw - 32px) / ${cols})))`
     };
+
+    const currentBestStr = bestScores[difficulty] ? String(bestScores[difficulty]).padStart(3, '0') + 's' : '--';
 
     return (
         <div className="game-container">
@@ -305,7 +319,6 @@ function App() {
                         } else if (cell.isFlagged) {
                             content = <span className="flag-icon">{ICON_FLAG}</span>;
                         } else if (cell.wrongFlag) {
-                            // If flag was wrong
                             content = <span className="mine-icon">{ICON_MINE}</span>;
                         }
 
@@ -315,11 +328,9 @@ function App() {
                                 className={cellClasses.join(' ')}
                                 data-value={cell.neighborMines}
                                 onMouseDown={(e) => {
-                                    // only trigger on left click when not touched
                                     if(e.button === 0 && !gameOver && !win && !cell.isRevealed && !cell.isFlagged) setFace(EMOJI_OOH);
                                 }}
                                 onMouseUp={(e) => {
-                                    // only trigger on left click
                                     if(e.button === 0 && !gameOver && !win && !cell.isRevealed && !cell.isFlagged) {
                                         setFace(EMOJI_SMILE);
                                         handleLeftClick(r, c);
@@ -327,7 +338,7 @@ function App() {
                                 }}
                                 onContextMenu={(e) => handleRightClick(e, r, c)}
                                 onTouchStart={(e) => {
-                                    e.preventDefault(); // prevents mouse fallback events
+                                    e.preventDefault(); 
                                     onTouchStart(e, r, c);
                                 }}
                                 onTouchEnd={(e) => {
@@ -340,6 +351,16 @@ function App() {
                         );
                     }))}
                 </div>
+            </div>
+
+            <div className="controls-footer">
+                <div className="high-score">
+                    <span>BEST TIME</span>
+                    {currentBestStr}
+                </div>
+                <button className="action-btn restart-action" onClick={initBoard}>
+                    Restart
+                </button>
             </div>
         </div>
     );
